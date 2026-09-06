@@ -6,11 +6,14 @@
 <title>西園寺ナミ｜OFFICIAL SITE</title>
 <meta name="description" content="西園寺ナミ オフィシャルサイト。配信・歌・グッズ・各種SNSのリンクをまとめています。">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://sweettimeeveryday.github.io/Nami-official-site/">
+<meta property="og:site_name" content="西園寺ナミ｜OFFICIAL SITE">
 <meta property="og:title" content="西園寺ナミ｜OFFICIAL SITE">
 <meta property="og:description" content="西園寺ナミ オフィシャルサイト。配信・歌・グッズ・各種SNSのリンクをまとめています。">
-<meta property="og:image" content="assets/img/ogp_1200x630.png">
+<meta property="og:image" content="https://sweettimeeveryday.github.io/Nami-official-site/assets/img/ogp_1200x630.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@nami_live4u">
+<link rel="canonical" href="https://sweettimeeveryday.github.io/Nami-official-site/">
 <link rel="icon" href="assets/img/favicon.ico">
 <link rel="apple-touch-icon" href="assets/img/favicon_180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,20 +55,141 @@
     <div class="hero__scroll">SCROLL</div>
   </section>
 
-  <!-- ============ INTRODUCTION ============ -->
+  <!-- ============ IMAGE STREAM ============
+       奥から手前へ画像が流れるコリドー。カードをクリックすると
+       画面中央にカードが開きます。
+       ▼ 編集するのは下の .stream__item の行だけです。
+         data-img   … カードに使う画像
+         data-pos   … 縦の見せ位置（0=上寄せ / 50=中央 / 100=下寄せ）
+                      カードは 18:25 の縦長。元画像がそれより縦長なら
+                      上下が切られるので、この数字で「どこを残すか」を決めます
+         data-en    … 小見出し（英字）
+         data-title … タイトル。これがある行だけクリックできます
+         data-cta   … ボタンの文字
+         href       … リンク先
+         タグの中身  … 説明文
+       data-title と href のない行は、押せない飾りのカードになります。
+       枚数を増減しても、レールは自動で9枚ぶん組み立て直します。 -->
   <section class="sec">
+    <div class="wrap">
+      <div class="shead shead--c rv">
+        <p class="shead__en">World</p>
+        <!-- 他のセクションの見出し（4〜6文字）より長いので、字送りを詰めた
+             --long を当て、狭い画面では読点で折り返す -->
+        <h2 class="shead__jp shead__jp--long">これまでの思い出と、<br class="only-sp">これから</h2>
+      </div>
+    </div>
+    <div class="rv" data-d="1">
+      <div class="stream" data-stream aria-hidden="true">
+        <!-- 背景動画。JS が画面幅に合わせて src を入れる（動きを減らす設定の
+             人にはポスター画像だけを見せるため、src は空のまま置いている） -->
+        <video class="stream__bg" id="streamBg" muted playsinline loop preload="none"
+               data-poster="assets/video/stream_bg_poster.jpg"></video>
+        <div class="stream__tint"></div>
+        <div class="stream__src">
+        <!-- リンクのあるカード -->
+        <a class="stream__item" href="https://youtube.com/channel/UC7piqxuu3PJtacDZArdDvTw" target="_blank" rel="noopener"
+           data-img="assets/img/card-01-stage.jpg" data-pos="20" data-en="Stream" data-title="YouTube" data-cta="YouTubeを開く">配信とアーカイブはこちら。ゲームも雑談も、ここに全部残しています。</a>
+        <a class="stream__item" href="https://www.tiktok.com/@namisaionji" target="_blank" rel="noopener"
+           data-img="assets/img/card-07-gallery.jpg" data-pos="20" data-en="Short" data-title="TikTok" data-cta="TikTokを開く">短い動画を気まぐれに投稿しています。@namisaionji</a>
+        <a class="stream__item" href="https://mf.awa.fm/3Bvzlmu" target="_blank" rel="noopener"
+           data-img="assets/img/card-03-piano.jpg" data-pos="20" data-en="Music" data-title="AWA" data-cta="AWAで聴く">配信楽曲をまとめて聴けます。</a>
+        <a class="stream__item" href="https://namilive4u.booth.pm/" target="_blank" rel="noopener"
+           data-img="assets/img/card-08-suit.jpg" data-pos="30" data-en="Goods" data-title="BOOTH" data-cta="BOOTHを見る">オリジナルグッズを販売しています。</a>
+
+        <!-- 飾りだけのカード（押せません）。説明文とリンクを足せば上と同じように開きます -->
+        <span class="stream__item" data-img="assets/img/card-11-kimono.jpg" data-pos="10"></span>
+        <span class="stream__item" data-img="assets/img/card-05-stairs.jpg" data-pos="45"></span>
+        <span class="stream__item" data-img="assets/img/card-09-coat.jpg" data-pos="45"></span>
+        <span class="stream__item" data-img="assets/img/card-10-bar.jpg"  data-pos="30"></span>
+        </div>
+        <div class="stream__scene">
+          <div class="stream__rail stream__rail--r"></div>
+          <div class="stream__rail stream__rail--l"></div>
+        </div>
+        <div class="stream__veil"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 中央に開くカード（image stream 用） -->
+  <div class="lb" id="streamLb" hidden>
+    <div class="lb__bd" data-lb-close></div>
+    <div class="lb__panel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+      <button class="lb__x" type="button" data-lb-close aria-label="閉じる">×</button>
+      <div class="lb__fig"><img id="lbImg" src="" alt=""></div>
+      <div class="lb__body">
+        <p class="lb__en" id="lbEn"></p>
+        <h3 class="lb__t" id="lbTitle"></h3>
+        <p class="lb__d" id="lbText"></p>
+        <div class="btns" id="lbBtns"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ INTRODUCTION ============ -->
+  <section class="sec sec--line">
     <div class="wrap">
       <div class="shead shead--c rv">
         <p class="shead__en">Introduction</p>
         <h2 class="shead__jp">はじめまして</h2>
       </div>
-      <div class="rv" data-d="1" style="display:flex;justify-content:center">
-        <p class="lead" style="text-align:center">
-          配信と歌を中心に活動しています。<br>
-          日々の配信のこと、歌のこと、グッズのこと。<br>
-          関わる場所をこのページにまとめました。<br>
-          <strong>好きになってもらえたら、嬉しい。</strong>
-        </p>
+      <!-- 長文なのでスクロール領域に収めている。高さは CSS の .sarea__vp で固定。
+           上下のぼかしと右のバーが「まだ続きがある」ことの合図。 -->
+      <div class="rv" data-d="1">
+        <div class="sarea" data-sarea>
+          <div class="sarea__frame">
+          <div class="sarea__vp" tabindex="0" role="region" aria-label="西園寺ナミ プロフィール本文">
+            <div class="sarea__body">
+        <h3 class="sarea__h">あなたの夜をとろかす七色ボイス</h3>
+        <p>夜の静けさに溶けるような声で、あなたの心にそっと触れること。<br>
+          あなたの居場所になれるまで。</p>
+        <p>歌うこと、演じること、誰かと語らうこと。<br>
+          これまで、&quot;声&quot;を通してさまざまな時間を届けてきました。</p>
+        <p>歌と声劇を中心に、配信や朗読、企画ものまで。<br>
+          甘く寄りそって、いたずらに心をくすぐって。ときに物語の中で誰かを演じてきました。<br>
+          &quot;声でできること&quot;を、私にしかできない色で表現しています。</p>
+        <p>遠くから眺める存在ではなく、あなたのお耳のすぐ隣にいる存在でありたい。<br>
+          眠る前のひとときや、ひとりで過ごす夜に、ふと会いに来てもらえるような存在でありたいと思っています。</p>
+        <p>甘えたり、いたずらしたり。<br>
+          ときには、言葉少なにそっと寄り添ったり。<br>
+          あなたの夜の隙間に、少しだけやわらかな明かりを灯せたなら、うれしいな、と思います。</p>
+        <p>お茶目でいたずら好きな私。<br>
+          作品に向き合うときの、真剣な私。<br>
+          そのどちらも、本物だから。</p>
+
+        <h3 class="sarea__h">声で歩いてきた軌跡</h3>
+        <p>2021年、配信アプリHAKUNAでは、唯一声劇と歌の両面から評価していただき「クナフェス」へ入賞しました。<br>
+          歌えること。<br>
+          演じられること。<br>
+          その両方を認めていただけたことは、私にとって最初の大きな一歩でした。</p>
+        <p>2023年、ドラマ『3人のチロル』オープニングテーマ歌唱権で2位入賞。<br>
+          同年、AWAラウンジ年間アワード2023では、トーカー賞とコラボレーター賞を受賞しました。<br>
+          その後別タイトルではドラマ『3人のチロル』ナレーター賞を1位獲得。悲願を達成しました。<br>
+          話すことも、誰かと一緒に場をつくることも、私にとって大切な表現です。<br>
+          歌だけではない、声の可能性を感じさせてもらえた出来事でした。</p>
+        <p>2024年7月、AWAラウンジ「音楽番組出演イベント Vol.2」でディレクター賞をいただき、ラジオ歌番組「アワソニ」へ出演。<br>
+          同じ年には怪談ライブ企画で優勝し、次回は審査員として参加しました。<br>
+          語る話も、歌うことも、誰かの心を動かす声の延長線上にあります。</p>
+        <p>2025年、spoonのcast企画「相紡ぐ2」では作品賞をいただきました。<br>
+          ほぼ初めてのペア朗読でしたが、誰かと声を重ねてひとつの作品をつくる喜びを知ることができました。</p>
+        <p>そして2026年3月。<br>
+          spoon企画「大嘘セリフ大賞」で、大賞のひとつである「おきまま賞」を受賞。<br>
+          自分らしさや個性そのものを受け取ってもらえたようで、今でも忘れられない出来事です。</p>
+        <p>2026年5月、初のリアルライブを開催しました。<br>
+          約2時間半にわたり歌いきった大きなステージ。<br>
+          そこにあった時間も、熱も、景色も――リスナーのみなさんと一緒につくり上げた、忘れられない夜です。</p>
+        <p>また会いたくなる声をテーマに、これからも絆を大切にしながら、みなさんの日常に寄り添うことを忘れずにいたいと思っています。</p>
+        <p>眠る前に、少しだけ声を聞きたくなる。<br>
+          ふとした夜に、また会いに来たくなる。<br>
+          そんな場所を、歌と声でつくっていきます。</p>
+        <p>あなたの夜の片隅に。</p>
+        <p class="sarea__sign">西園寺ナミ</p>
+            </div>
+          </div>
+          </div>
+          <p class="sarea__hint">下へスクロールできます</p>
+        </div>
       </div>
       <div class="orn rv" data-d="2" style="margin-top:56px">
         <img src="assets/img/logo_mark_transparent_256.png" alt="">
@@ -73,10 +197,11 @@
     </div>
   </section>
 
+
   <!-- ============ STREAM & MUSIC ============ -->
   <section class="sec sec--line">
     <div class="wrap">
-      <div class="shead rv">
+      <div class="shead shead--c rv">
         <p class="shead__en">Stream &amp; Music</p>
         <h2 class="shead__jp">配信と歌</h2>
       </div>
@@ -96,16 +221,6 @@
           <span class="card__b"><p class="card__t">AWA</p><p class="card__d">配信楽曲</p></span>
           <span class="card__ar">→</span>
         </a>
-        <a class="card" href="https://nana-music.com/users/9833830" target="_blank" rel="noopener">
-          <span class="card__ic">NA</span>
-          <span class="card__b"><p class="card__t">nana</p><p class="card__d">歌 / ショート</p></span>
-          <span class="card__ar">→</span>
-        </a>
-        <a class="card" href="https://u.pokekara.com/user/1348990314" target="_blank" rel="noopener">
-          <span class="card__ic">PK</span>
-          <span class="card__b"><p class="card__t">Pokekara</p><p class="card__d">歌 / フル</p></span>
-          <span class="card__ar">→</span>
-        </a>
         <a class="card" href="links.html">
           <span class="card__ic">＋</span>
           <span class="card__b"><p class="card__t">すべてのリンク</p><p class="card__d">SNS・支援・グッズ</p></span>
@@ -115,27 +230,34 @@
     </div>
   </section>
 
-  <!-- ============ LATEST (X) ============ -->
+  <!-- ============ LATEST (X) ============
+       X の埋め込みタイムラインは反映が不安定なため、フォローへの
+       導線だけに置き換えています。埋め込みに戻す場合は .xbox の
+       スタイルが style.css に残してあります。 -->
   <section class="sec sec--line">
     <div class="wrap">
       <div class="shead shead--c rv">
         <p class="shead__en">Latest</p>
-        <h2 class="shead__jp">最新の投稿</h2>
+        <h2 class="shead__jp">最新情報</h2>
       </div>
-      <div class="xbox rv" data-d="1">
-        <a class="twitter-timeline" data-theme="dark" data-height="620" data-chrome="transparent noheader nofooter"
-           href="https://twitter.com/nami_live4u?ref_src=twsrc%5Etfw">Posts by @nami_live4u</a>
+      <div class="rv" data-d="1" style="display:flex;justify-content:center">
+        <p class="lead" style="text-align:center">
+          配信スケジュールや最新の告知、日々の活動は<br>
+          X でリアルタイムにお知らせしています。<br>
+          <strong>フォローしてチェックしてもらえたら嬉しいです。</strong>
+        </p>
       </div>
       <div class="btns rv" data-d="2" style="justify-content:center;margin-top:34px">
-        <a class="btn" href="https://x.com/nami_live4u" target="_blank" rel="noopener">Follow on X</a>
+        <a class="btn btn--fill" href="https://x.com/nami_live4u" target="_blank" rel="noopener">Follow on X</a>
       </div>
+      <p class="rv" data-d="2" style="text-align:center;margin:16px 0 0;font-family:var(--serif-en);font-size:11px;letter-spacing:.22em;color:var(--text-3)">@nami_live4u</p>
     </div>
   </section>
 
   <!-- ============ GOODS & SUPPORT ============ -->
   <section class="sec sec--line">
     <div class="wrap">
-      <div class="shead rv">
+      <div class="shead shead--c rv">
         <p class="shead__en">Goods &amp; Support</p>
         <h2 class="shead__jp">グッズと応援</h2>
       </div>
@@ -176,6 +298,5 @@
 </footer>
 
 <script src="assets/js/main.js"></script>
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>

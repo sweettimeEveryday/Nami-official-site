@@ -149,6 +149,9 @@ ul{list-style:none;margin:0;padding:0}
   font-size:clamp(21px,3.2vw,30px);letter-spacing:.16em}
 .shead--c{text-align:center}
 .shead--c .shead__en{justify-content:center}
+/* 長い見出し用。他のセクションは4〜6文字なので同じ級数だと間延びして見える。
+   少し詰めて、2行になったときの行間も締める。 */
+.shead__jp--long{font-size:clamp(19px,2.7vw,26px);letter-spacing:.12em;line-height:1.7}
 
 .lead{max-width:56ch;color:var(--text-2);font-size:15px;line-height:2.15}
 .lead strong{color:var(--text);font-weight:400}
@@ -161,8 +164,11 @@ ul{list-style:none;margin:0;padding:0}
 .orn img{width:30px;opacity:.5}
 
 /* ---------- link cards ---------- */
-.cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(268px,1fr))}
+/* カードは最大340pxまで。行ごと中央に寄せるので、最後の行が1枚でも
+   中央に来る（grid のままだと1枚だけ左端に残ってしまう）。 */
+.cards{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
 .card{
+  flex:1 1 268px;max-width:340px;min-width:0;
   display:flex;align-items:center;gap:16px;padding:20px 22px;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
   transition:border-color .4s var(--ease),background .4s var(--ease),transform .4s var(--ease);
@@ -269,3 +275,309 @@ ul{list-style:none;margin:0;padding:0}
   .rv{opacity:1;transform:none}
   html{scroll-behavior:auto}
 }
+
+/* =========================================================
+   image stream — 奥から手前へ流れる画像のコリドー
+   ---------------------------------------------------------
+   ・長さの単位はすべて cqw（.stream の幅に対する%）。
+     幅が変われば奥行きも一緒に変わるので、どのサイズでも
+     同じ見え方になります。
+   ・カードは「1枚ごとに一定の倍率で大きくなる」ように
+     キーフレームを打ってあります。z を等間隔に並べると
+     手前でカード同士が離れて帯が切れるためです。
+   ・レールは最初に一気に開いてから止まります（fan=3.3）。
+     これで中央付近は平らな帯、その後に折れて斜めに走ります。
+   ・新しいカードは軸の「反対側」から生まれます（railBirth が
+     マイナス）。中央に穴が空くのを防ぐためで、意図的です。
+   数値は image-stream-hero コンポーネントの既定値そのままです。
+   ========================================================= */
+.stream{
+  position:relative;
+  width:100%;
+  aspect-ratio:2/1;
+  min-height:260px;
+  overflow:hidden;
+  container-type:inline-size;
+  background:var(--band-stream,#030204);
+}
+/* 背景動画。3D空間の外に置くのが要点で、.stream に perspective を持たせると
+   奥（z が負）のカードが動画より後ろに回り込んで消えてしまう。
+   遠近法は下の .stream__scene が受け持つ。 */
+.stream__bg{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;
+  filter:brightness(.78) saturate(1);
+}
+/* カードが埋もれないよう、動画の上に一枚かける */
+.stream__tint{
+  position:absolute;inset:0;pointer-events:none;
+  background:rgb(var(--band-stream-rgb,3 2 4) / .18);
+}
+/* 遠近法はここ。JS がカーソルに合わせて --stream-ox / --stream-oy を動かす */
+.stream__scene{
+  position:absolute;inset:0;
+  perspective:30cqw;
+  perspective-origin:var(--stream-ox,50%) var(--stream-oy,55%);
+}
+/* 元データの置き場。表示はせず、JS がここを読んでレールを組み立てる */
+.stream__src{display:none}
+/* レール自体は帯全面を覆うので、クリックは通してカードだけで受ける */
+.stream__rail{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
+.stream__card{
+  position:absolute;
+  /* button の既定スタイルを消す */
+  appearance:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;pointer-events:auto;
+  left:50%;top:55%;
+  width:18cqw;height:25cqw;
+  margin-left:-9cqw;margin-top:-12.5cqw;
+  border-radius:.4cqw;
+  overflow:hidden;
+  /* 透過PNGを入れても板として見えるように、下地を敷いて縁を1本引く */
+  background:linear-gradient(155deg,var(--surface-2),var(--surface));
+  box-shadow:0 0 0 1px rgba(42,43,51,.6);
+  backface-visibility:hidden;
+  /* !important は「アニメーションを減らす」設定の全体リセット
+     （末尾の *{animation:none!important}）に消されないため。
+     止めるのではなく一時停止させたいので下でポーズします。 */
+  animation-duration:18s!important;
+  animation-timing-function:linear!important;
+  animation-iteration-count:infinite!important;
+}
+.stream__card img{width:100%;height:100%;object-fit:cover;transition:filter .4s var(--ease)}
+.stream__rail--r > .stream__card{animation-name:stream-r!important}
+.stream__rail--l > .stream__card{animation-name:stream-l!important}
+
+/* 指している1枚だけ止めて明るくする。狙って押せるようにするため */
+.stream .stream__card:hover,
+.stream .stream__card:focus-visible{animation-play-state:paused}
+.stream__card:hover img,
+.stream__card:focus-visible img{filter:brightness(1.5)}
+.stream__card:focus-visible{outline:1px solid var(--crimson-hi);outline-offset:2px}
+
+/* 負のディレイで最初のフレームからコリドーが埋まった状態にする。
+   値は JS が --sd に入れる。カスタムプロパティなので、末尾の
+   *{animation:none!important} に消されず、枚数も自由に増やせる。 */
+.stream__card{animation-delay:var(--sd,0s)!important}
+
+/* 上下左右を帯の色に溶かして、切れ目とカードの出入りを隠す */
+.stream__veil{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(90deg,var(--band-stream,#030204) 0%,rgb(var(--band-stream-rgb,3 2 4) / 0) 16%,rgb(var(--band-stream-rgb,3 2 4) / 0) 84%,var(--band-stream,#030204) 100%),
+    linear-gradient(to bottom,var(--band-stream,#030204) 0%,rgb(var(--band-stream-rgb,3 2 4) / 0) 13%,rgb(var(--band-stream-rgb,3 2 4) / 0) 87%,var(--band-stream,#030204) 100%);
+}
+
+@keyframes stream-r{
+  0.00%{transform:translate3d(-11.00cqw,0,-258.46cqw) rotateY(-6.00deg)}
+  4.17%{transform:translate3d(-3.79cqw,0,-225.92cqw) rotateY(-6.92deg)}
+  8.33%{transform:translate3d(2.73cqw,0,-197.04cqw) rotateY(-7.83deg)}
+  12.50%{transform:translate3d(8.60cqw,0,-171.43cqw) rotateY(-8.75deg)}
+  16.67%{transform:translate3d(13.87cqw,0,-148.70cqw) rotateY(-9.67deg)}
+  20.83%{transform:translate3d(18.56cqw,0,-128.54cqw) rotateY(-10.58deg)}
+  25.00%{transform:translate3d(22.72cqw,0,-110.65cqw) rotateY(-11.50deg)}
+  29.17%{transform:translate3d(26.37cqw,0,-94.78cqw) rotateY(-12.42deg)}
+  33.33%{transform:translate3d(29.57cqw,0,-80.70cqw) rotateY(-13.33deg)}
+  37.50%{transform:translate3d(32.34cqw,0,-68.21cqw) rotateY(-14.25deg)}
+  41.67%{transform:translate3d(34.71cqw,0,-57.13cqw) rotateY(-15.17deg)}
+  45.83%{transform:translate3d(36.73cqw,0,-47.30cqw) rotateY(-16.08deg)}
+  50.00%{transform:translate3d(38.42cqw,0,-38.58cqw) rotateY(-17.00deg)}
+  54.17%{transform:translate3d(39.81cqw,0,-30.84cqw) rotateY(-17.92deg)}
+  58.33%{transform:translate3d(40.94cqw,0,-23.98cqw) rotateY(-18.83deg)}
+  62.50%{transform:translate3d(41.84cqw,0,-17.89cqw) rotateY(-19.75deg)}
+  66.67%{transform:translate3d(42.53cqw,0,-12.48cqw) rotateY(-20.67deg)}
+  70.83%{transform:translate3d(43.06cqw,0,-7.69cqw) rotateY(-21.58deg)}
+  75.00%{transform:translate3d(43.43cqw,0,-3.44cqw) rotateY(-22.50deg)}
+  79.17%{transform:translate3d(43.69cqw,0,0.33cqw) rotateY(-23.42deg)}
+  83.33%{transform:translate3d(43.85cqw,0,3.68cqw) rotateY(-24.33deg)}
+  87.50%{transform:translate3d(43.94cqw,0,6.65cqw) rotateY(-25.25deg)}
+  91.67%{transform:translate3d(43.98cqw,0,9.28cqw) rotateY(-26.17deg)}
+  95.83%{transform:translate3d(44.00cqw,0,11.62cqw) rotateY(-27.08deg)}
+  100.00%{transform:translate3d(44.00cqw,0,13.70cqw) rotateY(-28.00deg)}
+}
+@keyframes stream-l{
+  0.00%{transform:translate3d(11.00cqw,0,-258.46cqw) rotateY(6.00deg)}
+  4.17%{transform:translate3d(3.79cqw,0,-225.92cqw) rotateY(6.92deg)}
+  8.33%{transform:translate3d(-2.73cqw,0,-197.04cqw) rotateY(7.83deg)}
+  12.50%{transform:translate3d(-8.60cqw,0,-171.43cqw) rotateY(8.75deg)}
+  16.67%{transform:translate3d(-13.87cqw,0,-148.70cqw) rotateY(9.67deg)}
+  20.83%{transform:translate3d(-18.56cqw,0,-128.54cqw) rotateY(10.58deg)}
+  25.00%{transform:translate3d(-22.72cqw,0,-110.65cqw) rotateY(11.50deg)}
+  29.17%{transform:translate3d(-26.37cqw,0,-94.78cqw) rotateY(12.42deg)}
+  33.33%{transform:translate3d(-29.57cqw,0,-80.70cqw) rotateY(13.33deg)}
+  37.50%{transform:translate3d(-32.34cqw,0,-68.21cqw) rotateY(14.25deg)}
+  41.67%{transform:translate3d(-34.71cqw,0,-57.13cqw) rotateY(15.17deg)}
+  45.83%{transform:translate3d(-36.73cqw,0,-47.30cqw) rotateY(16.08deg)}
+  50.00%{transform:translate3d(-38.42cqw,0,-38.58cqw) rotateY(17.00deg)}
+  54.17%{transform:translate3d(-39.81cqw,0,-30.84cqw) rotateY(17.92deg)}
+  58.33%{transform:translate3d(-40.94cqw,0,-23.98cqw) rotateY(18.83deg)}
+  62.50%{transform:translate3d(-41.84cqw,0,-17.89cqw) rotateY(19.75deg)}
+  66.67%{transform:translate3d(-42.53cqw,0,-12.48cqw) rotateY(20.67deg)}
+  70.83%{transform:translate3d(-43.06cqw,0,-7.69cqw) rotateY(21.58deg)}
+  75.00%{transform:translate3d(-43.43cqw,0,-3.44cqw) rotateY(22.50deg)}
+  79.17%{transform:translate3d(-43.69cqw,0,0.33cqw) rotateY(23.42deg)}
+  83.33%{transform:translate3d(-43.85cqw,0,3.68cqw) rotateY(24.33deg)}
+  87.50%{transform:translate3d(-43.94cqw,0,6.65cqw) rotateY(25.25deg)}
+  91.67%{transform:translate3d(-43.98cqw,0,9.28cqw) rotateY(26.17deg)}
+  95.83%{transform:translate3d(-44.00cqw,0,11.62cqw) rotateY(27.08deg)}
+  100.00%{transform:translate3d(-44.00cqw,0,13.70cqw) rotateY(28.00deg)}
+}
+
+/* 動きを減らす設定では止めずに一時停止する。
+   animation:none にするとカード全体が中央に潰れてしまうため。 */
+@media (prefers-reduced-motion:reduce){
+  .stream__card{animation-play-state:paused!important}
+}
+
+/* ---------- image stream: 中央に開くカード ---------- */
+.lb{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:var(--pad)}
+.lb[hidden]{display:none}
+.lb__bd{
+  position:absolute;inset:0;background:rgba(5,5,6,.86);backdrop-filter:blur(10px);
+  opacity:0;transition:opacity .4s var(--ease);
+}
+.lb.is-in .lb__bd{opacity:1}
+.lb__panel{
+  position:relative;width:min(520px,100%);
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;
+  opacity:0;transform:translateY(14px) scale(.98);
+  transition:opacity .5s var(--ease),transform .5s var(--ease);
+}
+.lb.is-in .lb__panel{opacity:1;transform:none}
+.lb__fig{aspect-ratio:16/9;background:#000;border-bottom:1px solid var(--line)}
+.lb__fig img{width:100%;height:100%;object-fit:cover}
+.lb__body{padding:26px 28px 30px}
+.lb__en{
+  display:flex;align-items:center;gap:12px;margin:0;
+  font-family:var(--serif-en);font-size:11px;letter-spacing:.30em;
+  color:var(--crimson-hi);text-transform:uppercase;
+}
+.lb__en::before{content:"";width:26px;height:1px;background:var(--crimson)}
+.lb__t{font-family:var(--serif-jp);font-weight:400;margin:12px 0 0;
+  font-size:clamp(19px,3vw,25px);letter-spacing:.14em}
+.lb__d{margin:12px 0 0;color:var(--text-2);font-size:14px;line-height:2.05}
+.lb .btns{margin-top:22px}
+.lb__x{
+  position:absolute;top:12px;right:12px;z-index:2;
+  width:38px;height:38px;display:grid;place-items:center;
+  background:rgba(5,5,6,.6);border:1px solid var(--line-2);border-radius:var(--r);
+  color:var(--silver);font-size:18px;line-height:1;cursor:pointer;
+  transition:border-color .35s var(--ease),color .35s var(--ease);
+}
+.lb__x:hover{border-color:var(--crimson);color:var(--silver-hi)}
+@media (max-width:720px){
+  .lb__body{padding:22px 20px 26px}
+}
+/* CTA は日本語が入るので、英字前提の .btn から字送りだけ戻す */
+.lb .btn{font-family:var(--sans-jp);text-transform:none;letter-spacing:.14em;font-size:13px}
+
+/* =========================================================
+   配色: 白磁（Porcelain） — 白磁の白と墨、朱をひとつ
+   ---------------------------------------------------------
+   もとの CSS には rgba(5,5,6,...) のような黒が直接書かれた箇所が
+   あり、:root を差し替えるだけでは追従しないため、その7か所を
+   ここで変数化して上書きしている。
+     --band        … ヒーローの地色（ロゴ動画が黒素材なので暗いまま）
+     --band-stream … Gallery の帯の地色（背景動画の端から実測。灰桜グレード）
+   ========================================================= */
+:root{
+  --bg:#fbfaf8; --bg-2:#f4f2ed; --surface:#ffffff; --surface-2:#f7f5f0;
+  --line:#e7e4de; --line-2:#d3cfc6;
+  --text:#1a1a19; --text-2:#5c5a55; --text-3:#8d8a83;
+  --silver:#35332f; --silver-hi:#0f0f0e;
+  --crimson:#a3121c; --crimson-hi:#b81b26;
+
+  --bg-rgb:251 250 248;
+  --band:#111110; --band-rgb:17 17 16;
+  --band-stream:#030204; --band-stream-rgb:3 2 4;
+  --accent-rgb:163 18 28;
+}
+.hero{background:var(--band)}
+.hero__veil{background:
+  radial-gradient(58% 58% at 50% 44%,transparent 0%,rgb(var(--band-rgb) / .34) 72%,rgb(var(--band-rgb) / .82) 100%),
+  linear-gradient(to bottom,transparent 58%,rgb(var(--band-rgb) / .94) 100%)}
+.hd.is-stuck{background:rgb(var(--bg-rgb) / .88)}
+@media (max-width:720px){ .nav{background:rgb(var(--bg-rgb) / .97)} }
+.lb__bd{background:rgb(var(--band-rgb) / .88)}
+.phead{background:radial-gradient(70% 120% at 50% 0%,rgb(var(--accent-rgb) / .12),transparent 70%)}
+.sec{background:radial-gradient(120% 78% at 50% 0%,rgb(var(--accent-rgb) / .035),transparent 62%)}
+.card{background:linear-gradient(155deg,var(--surface-2),var(--surface))}
+
+/* ヒーローと Gallery の帯だけは暗いまま残す。素材が黒地なので、
+   ここを白くすると絵が浮いてしまう。帯の上に乗る文字とヘッダーは
+   明るいままにしておく。 */
+.hd:not(.is-stuck) .hd__logo span{color:#e9e5db}
+.hd:not(.is-stuck) .nav a{color:#b6b0a4}
+.hd:not(.is-stuck) .nav a:hover,.hd:not(.is-stuck) .nav a[aria-current="page"]{color:#fff}
+.hero__name{color:#f8f5ef}
+.hero__en{color:#b6afa2}
+.hero__scroll{color:#8b8478}
+.hero__scroll::after{background:linear-gradient(#8b8478,transparent)}
+.stream__card{background:linear-gradient(155deg,#241f1b,#14120f);box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+.orn img,.ft__mark{filter:brightness(.45) contrast(1.15)}
+.lb__panel{box-shadow:0 30px 80px rgba(0,0,0,.28)}
+
+/* =========================================================
+   scroll area — 長文を高さ固定の枠に収める
+   ---------------------------------------------------------
+   shadcn の ScrollArea 相当を素の CSS で。上下のぼかしと細い
+   スクロールバーで「まだ続きがある」ことを示す。
+   枠自体は tabindex="0" なのでキーボードでもスクロールできる。
+   ========================================================= */
+.sarea{max-width:620px;margin:0 auto}
+.sarea__frame{position:relative}
+.sarea__vp{
+  height:clamp(320px,52vh,460px);
+  overflow-y:auto;overscroll-behavior:contain;
+  padding:8px 22px 8px 2px;
+  /* Firefox */
+  scrollbar-width:thin;scrollbar-color:#bdb7ac transparent;
+}
+/* WebKit 系 */
+.sarea__vp::-webkit-scrollbar{width:6px}
+.sarea__vp::-webkit-scrollbar-track{background:transparent}
+.sarea__vp::-webkit-scrollbar-thumb{background:#bdb7ac;border-radius:3px}
+.sarea__vp::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
+.sarea__vp:focus-visible{outline:1px solid var(--crimson);outline-offset:6px}
+
+/* 上下のぼかし。バーの上には掛けたくないので右を空ける */
+.sarea__frame::before,.sarea__frame::after{
+  content:"";position:absolute;left:0;right:14px;height:52px;
+  pointer-events:none;z-index:1;
+  transition:opacity .4s var(--ease);
+}
+.sarea__frame::before{top:0;background:linear-gradient(var(--bg),rgb(var(--bg-rgb,251 250 248) / 0))}
+.sarea__frame::after{bottom:0;background:linear-gradient(rgb(var(--bg-rgb,251 250 248) / 0),var(--bg))}
+/* 端に着いたら、その側のぼかしと案内を消す（JS がクラスを付ける） */
+.sarea.is-top .sarea__frame::before{opacity:0}
+.sarea.is-end .sarea__frame::after{opacity:0}
+
+.sarea__body{color:var(--text-2);font-size:15px;line-height:2.15}
+.sarea__body p{margin:0 0 1.6em}
+.sarea__body p:last-child{margin-bottom:0}
+.sarea__h{
+  font-family:var(--serif-jp);font-weight:400;color:var(--text);
+  font-size:17px;letter-spacing:.10em;line-height:1.9;
+  margin:0 0 1.2em;padding-bottom:.7em;
+  border-bottom:1px solid var(--line);
+}
+.sarea__body > .sarea__h ~ .sarea__h{margin-top:2.6em}
+.sarea__sign{
+  margin-top:2.2em!important;text-align:right;
+  font-family:var(--serif-jp);color:var(--text);letter-spacing:.18em;
+}
+.sarea__hint{
+  margin:14px 0 0;text-align:center;
+  font-family:var(--serif-en);font-size:10px;letter-spacing:.22em;
+  color:var(--text-3);text-transform:uppercase;
+  transition:opacity .4s var(--ease);
+}
+.sarea.is-end .sarea__hint{opacity:0}
+
+@media (max-width:720px){
+  .sarea__vp{padding-right:16px}
+  .sarea__body{font-size:14px;line-height:2.05}
+  .sarea__h{font-size:16px}
+}
+/* 飾りだけのカードは押せないので、指の形にしない */
+div.stream__card{cursor:default}
