@@ -92,6 +92,15 @@ ul{list-style:none;margin:0;padding:0}
 .hero__media video,.hero__media img{
   width:100%;height:100%;object-fit:cover;object-position:center;
 }
+/* 動画の上に重ねる、再生後の静止画。読み込みだけ先に済ませておき、
+   終わってから 6 秒かけて浮かび上がらせる。位置と切り抜き方は
+   上の .hero__media video,.hero__media img の指定をそのまま使う。
+   カーブに var(--ease) を使わないのは意図的。あれは動き用の強い
+   ease-out で、0.6秒で8割まで上がってしまい「切り替わった」と見える。
+   溶け込ませたいので、前後が対称なゆるいカーブにしてある。 */
+.hero__still{position:absolute;inset:0;opacity:0;pointer-events:none;
+  transition:opacity 6s cubic-bezier(.45,0,.55,1)}
+.hero__still.is-in{opacity:1}
 .hero__veil{
   position:absolute;inset:0;pointer-events:none;
   background:
@@ -186,6 +195,15 @@ ul{list-style:none;margin:0;padding:0}
   border:1px solid var(--line-2);border-radius:50%;
   font-family:var(--serif-en);font-size:13px;letter-spacing:.06em;color:var(--silver);
 }
+/* 丸の中身がアイコンのとき（グッズと応援）。まわりの文字と同じ細さに見えるよう
+   線を1.2pxにしてある。色は .card__ic の color をそのまま継ぐ */
+.card__ic svg{width:19px;height:19px;fill:none;stroke:currentColor;
+  stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+/* 丸の中身が公式ロゴの画像のとき（YouTube / TikTok / AWA）。
+   ロゴは色も形も変えられないので、こちらで合わせるのは大きさと余白だけ。
+   公式アイコンは背景の色面までが1セット（YouTubeは角丸、TikTokは丸）なので、
+   線のアイコンより大きめに出さないと中の絵が潰れる。26pxがちょうどいい。 */
+.card__ic img{width:26px;height:26px;object-fit:contain;display:block}
 .card__b{min-width:0}
 .card__t{margin:0;font-size:14px;letter-spacing:.1em;color:var(--text)}
 .card__d{margin:3px 0 0;font-size:12px;color:var(--text-3);letter-spacing:.06em;
@@ -442,11 +460,30 @@ ul{list-style:none;margin:0;padding:0}
   overflow:hidden;
   opacity:0;transform:translateY(14px) scale(.98);
   transition:opacity .5s var(--ease),transform .5s var(--ease);
+  /* 感想の入力欄が入るぶん背が高くなるので、画面からはみ出さないように
+     写真の高さは固定したまま、下の本文側だけをスクロールさせる。
+     × は .lb__panel を基準に置いているので、スクロールしても残る。 */
+  display:flex;flex-direction:column;max-height:100%;
 }
 .lb.is-in .lb__panel{opacity:1;transform:none}
-.lb__fig{aspect-ratio:16/9;background:#000;border-bottom:1px solid var(--line)}
-.lb__fig img{width:100%;height:100%;object-fit:cover}
-.lb__body{padding:26px 28px 30px}
+/* パネルの写真枠。16:9 だと縦長の絵から見えるのが高さの3割ほどしかなく、
+   顔が切れる。4:3 にすると4割強が見えて、全身の絵もバストアップの絵も
+   顔が入る。縦に短い画面では戻して、ボタンが画面の外へ出ないようにする。 */
+.lb__fig{
+  position:relative;aspect-ratio:4/3;background:#000;
+  border-bottom:1px solid var(--line);
+  /* 縦に伸び縮みさせない。写真の高さは比率だけで決める */
+  flex:0 0 auto;overflow:hidden;
+}
+@media (max-height:700px){ .lb__fig{aspect-ratio:16/9} }
+/* 鑑賞導線は入力欄のぶん背が高いので、縦に余裕のない画面では
+   写真を少し浅くしてボタンを画面の中に収める */
+@media (max-height:880px){ .lb--cta .lb__fig{aspect-ratio:3/2} }
+@media (max-height:800px){ .lb--cta .lb__fig{aspect-ratio:16/9} }
+/* 絶対配置にしておかないと、画像そのものの高さが枠を押し広げて
+   aspect-ratio が効かなくなる（縦長の絵で顕著） */
+.lb__fig img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lb__body{padding:24px 28px 26px;overflow-y:auto;overscroll-behavior:contain;min-height:0}
 .lb__en{
   display:flex;align-items:center;gap:12px;margin:0;
   font-family:var(--serif-en);font-size:11px;letter-spacing:.30em;
@@ -470,6 +507,76 @@ ul{list-style:none;margin:0;padding:0}
 }
 /* CTA は日本語が入るので、英字前提の .btn から字送りだけ戻す */
 .lb .btn{font-family:var(--sans-jp);text-transform:none;letter-spacing:.14em;font-size:13px}
+
+/* =========================================================
+   鑑賞導線 — リンクのない一枚を開いたときの画面
+   ---------------------------------------------------------
+   置くのは 問いかけ → 補助文 → 空の入力欄 → 届け先 → ボタン、これだけ。
+   プレースホルダも例文も入れない。入力欄が空であることが仕様です。
+   入力欄は「文字色を透明にした textarea」＋「色を出すミラー」の
+   二枚重ね。上限を超えたぶんだけ赤くするためで、日本語を変換して
+   いるあいだは main.js が .is-ime を付けて素の textarea に戻します。
+   ========================================================= */
+.cta__ask{
+  font-family:var(--serif-jp);font-weight:400;margin:0;
+  font-size:clamp(17px,2.7vw,21px);letter-spacing:.10em;line-height:1.85;
+}
+.cta__sub{margin:10px 0 0;color:var(--text-2);font-size:13px;line-height:1.9}
+
+/* 枠と地色は外側の .ta が持つ。textarea を地色つきにすると
+   下のミラーを覆い隠してしまうため。 */
+.ta{
+  position:relative;margin-top:16px;
+  background:var(--surface-2);
+  border:1px solid var(--line-2);border-radius:var(--r);
+  transition:border-color .35s var(--ease);
+}
+.ta:focus-within{border-color:var(--crimson)}
+.ta.is-over{border-color:var(--crimson-hi)}
+.ta__mirror,.ta__in{
+  font-family:var(--sans-jp);font-size:15px;line-height:1.95;
+  letter-spacing:.04em;font-weight:300;
+  padding:14px 15px;border:0;background:transparent;
+  white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;
+  width:100%;
+}
+/* 色を出すのはこちら。文字だけを textarea の上に重ねるので、
+   カーソルと選択の色は下の textarea のものがそのまま見える。 */
+.ta__mirror{
+  position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;
+  color:var(--text);
+}
+.ta__in{
+  position:relative;display:block;margin:0;resize:none;overflow:hidden;
+  min-height:6em;
+  color:transparent;-webkit-text-fill-color:transparent;
+  caret-color:var(--crimson-hi);
+}
+.ta__in:focus{outline:none}
+.ta.is-ime .ta__in{color:var(--text);-webkit-text-fill-color:currentColor}
+.ta.is-ime .ta__mirror{visibility:hidden}
+.ta__mirror .over{color:var(--crimson-hi);background:rgb(var(--accent-rgb,163 18 28) / .12)}
+
+.cta__meter{
+  margin:6px 0 0;text-align:right;
+  font-family:var(--serif-en);font-size:11px;letter-spacing:.16em;color:var(--text-3);
+}
+.ta.is-over ~ .cta__meter{color:var(--crimson-hi)}
+.cta__warn{margin:10px 0 0;font-size:12px;line-height:1.85;color:var(--crimson-hi)}
+
+.cta__to{
+  display:flex;align-items:baseline;gap:14px;margin:16px 0 0;
+  padding-top:14px;border-top:1px solid var(--line);
+}
+.cta__to-l{font-size:11px;letter-spacing:.22em;color:var(--text-3)}
+.cta__at{font-family:var(--serif-en);font-size:15px;letter-spacing:.06em;color:var(--text)}
+.cta__note{margin:6px 0 0;font-size:11.5px;line-height:1.9;color:var(--text-3)}
+
+.cta__btns{margin-top:16px}
+.cta__btns .btn{flex:1 1 auto;justify-content:center;padding-left:18px;padding-right:18px}
+/* 本文が空のとき／上限を超えているときは押せない。書くところが
+   まだ空なだけなので、注意書きは足さずに見た目だけ落とす。 */
+.btn.is-off{opacity:.4;cursor:default;pointer-events:none}
 
 /* =========================================================
    配色: 白磁（Porcelain） — 白磁の白と墨、朱をひとつ
@@ -515,6 +622,14 @@ ul{list-style:none;margin:0;padding:0}
 .hero__scroll::after{background:linear-gradient(#8b8478,transparent)}
 .stream__card{background:linear-gradient(155deg,#241f1b,#14120f);box-shadow:0 0 0 1px rgba(255,255,255,.18)}
 .orn img,.ft__mark{filter:brightness(.45) contrast(1.15)}
+/* ロゴマークは暗い背景用の淡いシルバー（地とのコントラストが 1.7:1 しかない）。
+   白い地では飛んでしまうので、上のフッター・飾り罫と同じ処理を、ヘッダーと
+   プロフィールにも当てる。トップ最上部＝暗いヒーローの上にいるあいだ
+   （.hd に is-stuck が付いていない状態）だけは、明るいまま残す。
+   プロフィールの絵をロゴから立ち絵に差し替えたときは、ファイル名が変わるので
+   このフィルタは自動で外れる。 */
+.hd.is-stuck .hd__logo img,
+.prof__fig img[src*="logo_mark"]{filter:brightness(.45) contrast(1.15)}
 .lb__panel{box-shadow:0 30px 80px rgba(0,0,0,.28)}
 
 /* =========================================================
@@ -579,5 +694,4 @@ ul{list-style:none;margin:0;padding:0}
   .sarea__body{font-size:14px;line-height:2.05}
   .sarea__h{font-size:16px}
 }
-/* 飾りだけのカードは押せないので、指の形にしない */
-div.stream__card{cursor:default}
+/* 帯のカードはすべて押せる（リンクのない一枚は鑑賞導線が開く） */

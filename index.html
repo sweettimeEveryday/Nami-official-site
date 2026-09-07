@@ -46,6 +46,13 @@
       <!-- 1回だけ再生して最後のフレームで止まる（loop なし） -->
       <video id="heroVideo" muted playsinline autoplay preload="auto"
              poster="assets/video/logo_poster_2560x1440.jpg"></video>
+      <!-- 再生が終わったら、この高解像度の静止画へゆっくり移ります。
+           動画は 2560x1440 なので Retina では拡大されてぼやけます。
+           この1枚は 3840x2160 あるので、そこが解消されます。
+           差し替えるときは assets/video/ の logo_final_*.jpg を
+           同じ名前で上書きしてください（コードは触らなくて大丈夫です）。 -->
+      <img class="hero__still" id="heroStill" alt="" aria-hidden="true"
+           decoding="async" fetchpriority="low">
     </div>
     <div class="hero__veil"></div>
     <div class="hero__foot">
@@ -68,8 +75,9 @@
          data-cta   … ボタンの文字
          href       … リンク先
          タグの中身  … 説明文
-       data-title と href のない行は、押せない飾りのカードになります。
-       枚数を増減しても、レールは自動で9枚ぶん組み立て直します。 -->
+       href のない行は「絵だけの一枚」として開きます（鑑賞導線）。
+       パネルには説明文のかわりに、感想を X に届ける入力欄が出ます。
+       枚数を増減しても、レールは自動で組み立て直します。 -->
   <section class="sec">
     <div class="wrap">
       <div class="shead shead--c rv">
@@ -87,21 +95,67 @@
                data-poster="assets/video/stream_bg_poster.jpg"></video>
         <div class="stream__tint"></div>
         <div class="stream__src">
-        <!-- リンクのあるカード -->
+        <!-- CARDS:START -->
+        <!-- 押せるカード。data-title のある行だけが押せます -->
         <a class="stream__item" href="https://youtube.com/channel/UC7piqxuu3PJtacDZArdDvTw" target="_blank" rel="noopener"
-           data-img="assets/img/card-01-stage.jpg" data-pos="20" data-en="Stream" data-title="YouTube" data-cta="YouTubeを開く">配信とアーカイブはこちら。ゲームも雑談も、ここに全部残しています。</a>
+           data-img="assets/img/card-01-stage.jpg" data-pos="28" data-en="Stream" data-title="YouTube" data-cta="YouTubeを開く">配信とアーカイブはこちら。ゲームも雑談も、ここに全部残しています。</a>
         <a class="stream__item" href="https://www.tiktok.com/@namisaionji" target="_blank" rel="noopener"
-           data-img="assets/img/card-07-gallery.jpg" data-pos="20" data-en="Short" data-title="TikTok" data-cta="TikTokを開く">短い動画を気まぐれに投稿しています。@namisaionji</a>
+           data-img="assets/img/card-07-gallery.jpg" data-pos="8" data-en="Short" data-title="TikTok" data-cta="TikTokを開く">短い動画を気まぐれに投稿しています。@namisaionji</a>
         <a class="stream__item" href="https://mf.awa.fm/3Bvzlmu" target="_blank" rel="noopener"
-           data-img="assets/img/card-03-piano.jpg" data-pos="20" data-en="Music" data-title="AWA" data-cta="AWAで聴く">配信楽曲をまとめて聴けます。</a>
+           data-img="assets/img/card-03-piano.jpg" data-pos="15" data-en="Music" data-title="AWA" data-cta="AWAで聴く">配信楽曲をまとめて聴けます。</a>
         <a class="stream__item" href="https://namilive4u.booth.pm/" target="_blank" rel="noopener"
-           data-img="assets/img/card-08-suit.jpg" data-pos="30" data-en="Goods" data-title="BOOTH" data-cta="BOOTHを見る">オリジナルグッズを販売しています。</a>
+           data-img="assets/img/card-08-suit.jpg" data-pos="4" data-en="Goods" data-title="BOOTH" data-cta="BOOTHを見る">オリジナルグッズを販売しています。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=UZH8RM_HUSI" target="_blank" rel="noopener"
+           data-img="assets/img/card-14-terrace.jpg" data-pos="3" data-en="Song" data-title="夜明けと蛍" data-cta="YouTubeで見る">カバーです。夜がいちばん静かな時間に。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=4wTDNe6yTF8" target="_blank" rel="noopener"
+           data-img="assets/img/card-27-heart-balloon.jpg" data-pos="15" data-en="Song" data-title="ちゃんとあるよ" data-cta="YouTubeで見る">feat. として声で参加した楽曲です。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=VmC3zUovQFs" target="_blank" rel="noopener"
+           data-img="assets/img/card-13-coat.jpg" data-pos="9" data-en="Voice" data-title="声劇「怪物」" data-cta="YouTubeで見る">声だけで演じるお芝居です。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=fxxMXVnJYTs" target="_blank" rel="noopener"
+           data-img="assets/img/card-12-live.jpg" data-pos="1" data-en="Song" data-title="唱" data-cta="YouTubeで見る">生音で歌ってみました。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=kPEr4t_o-Tc" target="_blank" rel="noopener"
+           data-img="assets/img/card-23-nami-ocean.jpg" data-pos="9" data-en="Song" data-title="Summer snow" data-cta="YouTubeで見る">カバーです。夏に降る雪の話。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=PhaAEMo6tMo" target="_blank" rel="noopener"
+           data-img="assets/img/card-15-lounge.jpg" data-pos="18" data-en="Song" data-title="心のままに" data-cta="YouTubeで見る">聴くだけで気もちが楽になる一曲を。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=PCpjFAOwq8Y" target="_blank" rel="noopener"
+           data-img="assets/img/card-17-wisteria.jpg" data-pos="10" data-en="Song" data-title="グレーテのいない星" data-cta="YouTubeで見る">傘村トータさんの楽曲のカバーです。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=9Eqsl5xhjhM" target="_blank" rel="noopener"
+           data-img="assets/img/card-31-rose-heart.jpg" data-pos="19" data-en="Voice" data-title="グッドモーニングコール 3" data-cta="YouTubeで見る">朝いちばんに届ける、目覚ましの声です。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=-HKgswtmQQ0" target="_blank" rel="noopener"
+           data-img="assets/img/card-29-lace.jpg" data-pos="11" data-en="Voice" data-title="グッドモーニングコール 1" data-cta="YouTubeで見る">朝いちばんに届ける、目覚ましの声です。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=FOzmcwu14jY" target="_blank" rel="noopener"
+           data-img="assets/img/card-30-bouquet.jpg" data-pos="6" data-en="Voice" data-title="グッドモーニングコール 2" data-cta="YouTubeで見る">朝いちばんに届ける、目覚ましの声です。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=Tivu7xqyH6I" target="_blank" rel="noopener"
+           data-img="assets/img/card-25-piano-back.jpg" data-pos="6" data-en="Song" data-title="心のそばに" data-cta="YouTubeで見る">桜が舞い散るように歌ってみました。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=mdA-vSpqMwI" target="_blank" rel="noopener"
+           data-img="assets/img/card-24-momiji.jpg" data-pos="2" data-en="Song" data-title="泥中に咲く" data-cta="YouTubeで見る">カバーです。ℱⁿナミが歌うとこうなる。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=lEx94_OG1P0" target="_blank" rel="noopener"
+           data-img="assets/img/card-35-kitsune.jpg" data-pos="18" data-en="Song" data-title="月のワルツ" data-cta="YouTubeで見る">歌詞付きのカバーです。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=L1OUA81pPqk" target="_blank" rel="noopener"
+           data-img="assets/img/card-21-sunflower.jpg" data-pos="0" data-en="Song" data-title="SPARKLE" data-cta="YouTubeで見る">歌詞付きのカバーです。女性キーで。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=KPWZNz4ckkA" target="_blank" rel="noopener"
+           data-img="assets/img/card-28-heart-box.jpg" data-pos="1" data-en="Voice" data-title="声劇「夢で逢えたら」" data-cta="YouTubeで見る">声だけで演じるお芝居です。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=85e9gyuyvmY" target="_blank" rel="noopener"
+           data-img="assets/img/card-22-bar.jpg" data-pos="4" data-en="Reading" data-title="歌詞朗読 コンタクトケース" data-cta="YouTubeで見る">Saucy Dog の歌詞を、朗読で。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=e6IZnBB-gow" target="_blank" rel="noopener"
+           data-img="assets/img/card-20-autumn.jpg" data-pos="10" data-en="Song" data-title="エミリーと15の約束" data-cta="YouTubeで見る">歌詞付きのカバーです。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=UWbQWrg6D-I" target="_blank" rel="noopener"
+           data-img="assets/img/card-18-sunset.jpg" data-pos="10" data-en="Song" data-title="すずめ" data-cta="YouTubeで見る">歌詞つきのカバーです。原曲は十明さんの歌唱。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=iDB4ytPLOYU" target="_blank" rel="noopener"
+           data-img="assets/img/card-36-stage-red.jpg" data-pos="5" data-en="Song" data-title="忘れじの言の葉" data-cta="YouTubeで見る">カバーです。ℱⁿナミの声で。</a>
+        <a class="stream__item" href="https://www.youtube.com/watch?v=69hcW9YsYhY" target="_blank" rel="noopener"
+           data-img="assets/img/card-34-mic-sing.jpg" data-pos="16" data-en="Song" data-title="Part of Me" data-cta="YouTubeで見る">浜崎あゆみさんの楽曲のカバーです。</a>
 
-        <!-- 飾りだけのカード（押せません）。説明文とリンクを足せば上と同じように開きます -->
-        <span class="stream__item" data-img="assets/img/card-11-kimono.jpg" data-pos="10"></span>
-        <span class="stream__item" data-img="assets/img/card-05-stairs.jpg" data-pos="45"></span>
-        <span class="stream__item" data-img="assets/img/card-09-coat.jpg" data-pos="45"></span>
-        <span class="stream__item" data-img="assets/img/card-10-bar.jpg"  data-pos="30"></span>
+        <!-- 絵だけのカード。押すと鑑賞導線（感想を X に届ける画面）が開きます。
+             説明文とリンクを足せば、上と同じ「リンクのあるカード」になります -->
+        <span class="stream__item" data-img="assets/img/card-11-kimono.jpg" data-pos="11"></span>
+        <span class="stream__item" data-img="assets/img/card-05-stairs.jpg" data-pos="3"></span>
+        <span class="stream__item" data-img="assets/img/card-16-purple.jpg" data-pos="17"></span>
+        <span class="stream__item" data-img="assets/img/card-19-festival.jpg" data-pos="3"></span>
+        <span class="stream__item" data-img="assets/img/card-26-mic.jpg" data-pos="70 23"></span>
+        <span class="stream__item" data-img="assets/img/card-32-heart-red.jpg" data-pos="0"></span>
+        <span class="stream__item" data-img="assets/img/card-33-stage-back.jpg" data-pos="4"></span>
+        <!-- CARDS:END -->
         </div>
         <div class="stream__scene">
           <div class="stream__rail stream__rail--r"></div>
@@ -117,12 +171,37 @@
     <div class="lb__bd" data-lb-close></div>
     <div class="lb__panel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
       <button class="lb__x" type="button" data-lb-close aria-label="閉じる">×</button>
-      <div class="lb__fig"><img id="lbImg" src="" alt=""></div>
+      <div class="lb__fig"><img id="lbImg" alt=""></div>
       <div class="lb__body">
-        <p class="lb__en" id="lbEn"></p>
-        <h3 class="lb__t" id="lbTitle"></h3>
-        <p class="lb__d" id="lbText"></p>
-        <div class="btns" id="lbBtns"></div>
+        <!-- リンクのあるカード（配信・楽曲・グッズ・動画） -->
+        <div id="lbInfo">
+          <p class="lb__en" id="lbEn"></p>
+          <h3 class="lb__t" id="lbTitle"></h3>
+          <p class="lb__d" id="lbText"></p>
+          <div class="btns" id="lbBtns"></div>
+        </div>
+        <!-- リンクのないカード（絵だけの一枚）＝ 鑑賞導線
+             ここに置くのは 問いかけ → 補助文 → 空の入力欄 → 届け先 → ボタン、これだけ。
+             選択肢・例文・プレースホルダの類は置かない（書く前に答えの型を
+             見せると、その人の言葉ではなく例のバリエーションになるため）。
+             問いかけの文は main.js が3案から出し分ける。 -->
+        <div class="cta" id="lbCta" hidden>
+          <h3 class="cta__ask" id="ctaAsk"></h3>
+          <p class="cta__sub" id="ctaSub"></p>
+          <div class="ta" id="ctaWrap">
+            <div class="ta__mirror" id="ctaMirror" aria-hidden="true"></div>
+            <textarea class="ta__in" id="ctaText" rows="4" aria-labelledby="ctaAsk"></textarea>
+          </div>
+          <p class="cta__meter"><span id="ctaN">7</span> / 140</p>
+          <p class="cta__warn" id="ctaWarn" hidden>先頭が @ で始まる投稿は、X では返信として配信されます。ナミのフォロワーにはほとんど表示されません。</p>
+          <p class="cta__to"><span class="cta__to-l">届け先</span><span class="cta__at">@nami_live4u</span></p>
+          <p class="cta__note">この一行が最後に添えられます。あなたの言葉が本人に届きます。</p>
+          <div class="btns cta__btns">
+            <button class="btn" type="button" id="ctaCopy">下書きをコピー</button>
+            <a class="btn btn--fill is-off" id="ctaGo" target="_blank" rel="noopener noreferrer" aria-disabled="true">感じたことを届ける</a>
+          </div>
+          <p class="cta__note">X の投稿画面が開きます。内容は自由に編集できます。</p>
+        </div>
       </div>
     </div>
   </div>
@@ -207,22 +286,22 @@
       </div>
       <div class="cards rv" data-d="1">
         <a class="card" href="https://youtube.com/channel/UC7piqxuu3PJtacDZArdDvTw" target="_blank" rel="noopener">
-          <span class="card__ic">YT</span>
-          <span class="card__b"><p class="card__t">YouTube</p><p class="card__d">配信・アーカイブ</p></span>
+          <span class="card__ic"><img src="assets/img/brand/youtube.png" alt="" data-fallback="YT"></span>
+          <span class="card__b"><p class="card__t">YouTube</p><p class="card__d">アーカイブ</p></span>
           <span class="card__ar">→</span>
         </a>
         <a class="card" href="https://www.tiktok.com/@namisaionji" target="_blank" rel="noopener">
-          <span class="card__ic">TT</span>
-          <span class="card__b"><p class="card__t">TikTok</p><p class="card__d">@namisaionji</p></span>
+          <span class="card__ic"><img src="assets/img/brand/tiktok.png" alt="" data-fallback="TT"></span>
+          <span class="card__b"><p class="card__t">TikTok</p><p class="card__d">配信</p></span>
           <span class="card__ar">→</span>
         </a>
         <a class="card" href="https://mf.awa.fm/3Bvzlmu" target="_blank" rel="noopener">
-          <span class="card__ic">AW</span>
-          <span class="card__b"><p class="card__t">AWA</p><p class="card__d">配信楽曲</p></span>
+          <span class="card__ic">AWA</span>
+          <span class="card__b"><p class="card__t">AWA</p><p class="card__d">配信</p></span>
           <span class="card__ar">→</span>
         </a>
         <a class="card" href="links.html">
-          <span class="card__ic">＋</span>
+          <span class="card__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.6v12.8M5.6 12h12.8"/></svg></span>
           <span class="card__b"><p class="card__t">すべてのリンク</p><p class="card__d">SNS・支援・グッズ</p></span>
           <span class="card__ar">→</span>
         </a>
@@ -262,19 +341,20 @@
         <h2 class="shead__jp">グッズと応援</h2>
       </div>
       <div class="cards rv" data-d="1">
+        <!-- 丸の中はアイコン。線の太さと大きさは style.css の .card__ic svg で決めています -->
+        <a class="card" href="https://doneru.jp/nami1211" target="_blank" rel="noopener">
+          <span class="card__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.3-4.4-7.3-9.4a4.1 4.1 0 0 1 7.3-2.6 4.1 4.1 0 0 1 7.3 2.6c0 5-7.3 9.4-7.3 9.4z"/></svg></span>
+          <span class="card__b"><p class="card__t">Doneru</p><p class="card__d">投げ銭・支援</p></span>
+          <span class="card__ar">→</span>
+        </a>
         <a class="card" href="https://namilive4u.booth.pm/" target="_blank" rel="noopener">
-          <span class="card__ic">BO</span>
+          <span class="card__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 8.5h15l-1.2 11.2a1.6 1.6 0 0 1-1.6 1.4H7.3a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M8.6 8.5V6.4a3.4 3.4 0 0 1 6.8 0v2.1"/></svg></span>
           <span class="card__b"><p class="card__t">BOOTH</p><p class="card__d">オリジナルグッズ</p></span>
           <span class="card__ar">→</span>
         </a>
         <a class="card" href="https://suzuri.jp/search?q=%E8%A5%BF%E5%9C%92%E5%AF%BA%E3%83%8A%E3%83%9F" target="_blank" rel="noopener">
-          <span class="card__ic">SZ</span>
+          <span class="card__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3.8 5 5.6a1.4 1.4 0 0 0-.8 1.6l.8 3.2 2.2-.5v9.5a.8.8 0 0 0 .8.8h7.6a.8.8 0 0 0 .8-.8v-9.5l2.2.5.8-3.2a1.4 1.4 0 0 0-.8-1.6L15 3.8"/><path d="M9 3.8a3 3 0 0 0 6 0"/></svg></span>
           <span class="card__b"><p class="card__t">SUZURI</p><p class="card__d">アパレル・雑貨</p></span>
-          <span class="card__ar">→</span>
-        </a>
-        <a class="card" href="https://doneru.jp/nami1211" target="_blank" rel="noopener">
-          <span class="card__ic">DN</span>
-          <span class="card__b"><p class="card__t">Doneru</p><p class="card__d">投げ銭・支援</p></span>
           <span class="card__ar">→</span>
         </a>
       </div>
