@@ -161,6 +161,9 @@ ul{list-style:none;margin:0;padding:0}
 /* 長い見出し用。他のセクションは4〜6文字なので同じ級数だと間延びして見える。
    少し詰めて、2行になったときの行間も締める。 */
 .shead__jp--long{font-size:clamp(19px,2.7vw,26px);letter-spacing:.12em;line-height:1.7}
+/* 見出しの下に置く一言。帯のカードが押せることを伝えるためだけの行なので、
+   見出しより一段小さく、地の文より静かにしておく。 */
+.shead__note{margin:14px 0 0;font-size:13px;line-height:1.9;letter-spacing:.08em;color:var(--text-2)}
 
 .lead{max-width:56ch;color:var(--text-2);font-size:15px;line-height:2.15}
 .lead strong{color:var(--text);font-weight:400}
@@ -365,12 +368,50 @@ ul{list-style:none;margin:0;padding:0}
 .stream__rail--r > .stream__card{animation-name:stream-r!important}
 .stream__rail--l > .stream__card{animation-name:stream-l!important}
 
-/* 指している1枚だけ止めて明るくする。狙って押せるようにするため */
-.stream .stream__card:hover,
+/* 指している1枚だけ止めて明るくする。狙って押せるようにするため。
+   マウスのある機器だけ。タッチだと、押したあとに hover が残って
+   カードが1枚止まったままになる。 */
+@media (hover:hover){
+  .stream .stream__card:hover{animation-play-state:paused}
+  .stream__card:hover img{filter:brightness(1.5)}
+}
 .stream .stream__card:focus-visible{animation-play-state:paused}
-.stream__card:hover img,
 .stream__card:focus-visible img{filter:brightness(1.5)}
 .stream__card:focus-visible{outline:1px solid var(--crimson-hi);outline-offset:2px}
+
+/* 触れた瞬間に光る。スマホは hover が無いので、押したことがここで伝わる */
+.stream__card.is-tap img{filter:brightness(2) saturate(1.06)}
+
+/* 「押せます」の印。左右のレールに1枚ずつ、ゆっくり明滅させる。
+   JS が .is-hint を付け、カードを一度でも開いたら外して二度と出さない。
+   ふちが光る（::after）のと、指で触れたときのような輪が広がる（::before）の
+   二段構え。カードは overflow:hidden なので、光は外ではなく内側に回している。 */
+.stream__card.is-hint::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 0 0 .2cqw rgba(255,255,255,.95),
+             inset 0 0 3.2cqw rgba(255,255,255,.42);
+  opacity:0;
+  animation:tapHint 3.4s var(--ease) infinite!important;
+}
+.stream__card.is-hint::before{
+  content:"";position:absolute;left:50%;top:50%;
+  width:2.6cqw;height:2.6cqw;margin:-1.3cqw 0 0 -1.3cqw;
+  border-radius:50%;border:.14cqw solid rgba(255,255,255,.95);
+  opacity:0;pointer-events:none;z-index:1;
+  animation:tapRipple 3.4s var(--ease) infinite!important;
+}
+@keyframes tapHint{0%,100%{opacity:0} 42%,58%{opacity:1}}
+@keyframes tapRipple{
+  0%,18%{opacity:0;transform:scale(.45)}
+  40%{opacity:.95;transform:scale(1)}
+  74%,100%{opacity:0;transform:scale(2.4)}
+}
+/* 動きを減らす設定では明滅させず、ふちだけ光らせたまま置く
+   （末尾の *{animation:none!important} で止まると消えてしまうため） */
+@media (prefers-reduced-motion:reduce){
+  .stream__card.is-hint::after{opacity:.85}
+  .stream__card.is-hint::before{display:none}
+}
 
 /* 負のディレイで最初のフレームからコリドーが埋まった状態にする。
    値は JS が --sd に入れる。カスタムプロパティなので、末尾の
@@ -604,7 +645,7 @@ ul{list-style:none;margin:0;padding:0}
   radial-gradient(58% 58% at 50% 44%,transparent 0%,rgb(var(--band-rgb) / .34) 72%,rgb(var(--band-rgb) / .82) 100%),
   linear-gradient(to bottom,transparent 58%,rgb(var(--band-rgb) / .94) 100%)}
 .hd.is-stuck{background:rgb(var(--bg-rgb) / .88)}
-@media (max-width:720px){ .nav{background:rgb(var(--bg-rgb) / .97)} }
+
 .lb__bd{background:rgb(var(--band-rgb) / .88)}
 .phead{background:radial-gradient(70% 120% at 50% 0%,rgb(var(--accent-rgb) / .12),transparent 70%)}
 .sec{background:radial-gradient(120% 78% at 50% 0%,rgb(var(--accent-rgb) / .035),transparent 62%)}
@@ -616,6 +657,38 @@ ul{list-style:none;margin:0;padding:0}
 .hd:not(.is-stuck) .hd__logo span{color:#e9e5db}
 .hd:not(.is-stuck) .nav a{color:#b6b0a4}
 .hd:not(.is-stuck) .nav a:hover,.hd:not(.is-stuck) .nav a[aria-current="page"]{color:#fff}
+
+/* ---------- スマホのメニュー（不具合の修正をここにまとめている） ---------- */
+@media (max-width:720px){
+  .nav{background:rgb(var(--bg-rgb) / .97)}
+
+  /* (1) メニューが header の中に潰れる問題。
+     backdrop-filter が効いている要素は、その中の position:fixed の
+     基準になってしまう。スクロールして .hd に is-stuck が付くと、
+     全画面のはずの .nav が高さ66pxのヘッダーに閉じ込められ、
+     項目が画面の外へはみ出していた。開いているあいだだけ外す。
+     閉じているときはこれまでどおりヘッダーがぼける。 */
+  body.is-open .hd.is-stuck{backdrop-filter:none;-webkit-backdrop-filter:none}
+
+  /* (2) メニューの文字が読めない問題。
+     ヒーローの上（is-stuck が付く前）用の淡い文字色が、全画面に
+     広がった白い地の上にもそのまま乗っていた。現在ページの項目に
+     いたっては白地に白。メニューの中では通常の文字色に戻す。 */
+  .nav a,
+  .hd:not(.is-stuck) .nav a{color:var(--text-2)}
+  .nav a:hover,
+  .nav a[aria-current="page"],
+  .hd:not(.is-stuck) .nav a:hover,
+  .hd:not(.is-stuck) .nav a[aria-current="page"]{color:var(--silver-hi)}
+
+  /* (3) トップ最上部でハンバーガーが見えない問題。
+     線と枠が墨色なので、暗いヒーローの上では地に沈んでいた。
+     ここだけ明るくし、メニューを開いたら地が白になるので戻す。 */
+  .hd:not(.is-stuck) .burger{border-color:rgba(233,229,219,.42)}
+  .hd:not(.is-stuck) .burger i{background:#e9e5db}
+  body.is-open .hd:not(.is-stuck) .burger{border-color:var(--line-2)}
+  body.is-open .hd:not(.is-stuck) .burger i{background:var(--silver)}
+}
 .hero__name{color:#f8f5ef}
 .hero__en{color:#b6afa2}
 .hero__scroll{color:#8b8478}

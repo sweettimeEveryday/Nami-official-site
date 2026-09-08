@@ -28,12 +28,20 @@
       burger.setAttribute('aria-expanded', open ? 'true' : 'false');
       document.body.style.overflow = open ? 'hidden' : '';
     });
+    var shut = function () {
+      document.body.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
     document.querySelectorAll('.nav a').forEach(function (a) {
-      a.addEventListener('click', function () {
-        document.body.classList.remove('is-open');
-        document.body.style.overflow = '';
-      });
+      a.addEventListener('click', shut);
     });
+    /* 開いたまま画面を広げると、PC幅ではメニューが消えるのに
+       本文のスクロールが止まったままになる。幅が変わったら閉じる。 */
+    var wide = window.matchMedia('(min-width: 721px)');
+    var onWide = function (e) { if (e.matches) { shut(); } };
+    if (wide.addEventListener) { wide.addEventListener('change', onWide); }
+    else if (wide.addListener) { wide.addListener(onWide); }
   }
 
   /* ---- 3. スクロールリビール ---- */
@@ -153,11 +161,22 @@
   var seats = [];   /* カード1枚ぶんの状態 { q, at, el, img, item } */
   var lit = false;  /* 画像の読み込みを始めたか */
 
+  /* 押せることを知らせる印。左右のレールに1枚ずつ、ゆっくり明滅させる。
+     見出しの下の一文だけだと、帯を見ている人の目には入らないため。
+     一度でもカードを開いた人には二度と出さない。 */
+  var TAP_KEY = 'nami.tapped';
+  var hinting = true;
+  try { hinting = window.localStorage.getItem(TAP_KEY) !== '1'; } catch (e) { /* 拒否されることがある */ }
+  var hinted = [];
+
   /* ---- 1. レールを組む ---- */
   Array.prototype.forEach.call(box.querySelectorAll('.stream__rail'), function (rail, ri) {
     var q = queues[ri];
     if (!q.length) { return; }
     var n = Math.min(PER_RAIL, q.length);
+    /* 印をつける席。うしろの席ほど手前に居るので、スクロールして
+       帯が見えた直後から目に入る位置を選ぶ。左右で1つずらす。 */
+    var mark = Math.max(0, n - 3 + ri);
     /* このレールが次に配る絵。最初の n 枚は席に配ってあるので n から。 */
     var cursor = { i: n % q.length };
     for (var i = 0; i < n; i++) {
@@ -177,10 +196,19 @@
       img.draggable = false;
       el.appendChild(img);
 
+      if (hinting && i === mark) { el.classList.add('is-hint'); hinted.push(el); }
+
       var seat = { q: q, at: i, el: el, img: img, item: null };
       face(seat);
       seats.push(seat);
 
+      /* 触れた瞬間に光らせる。スマホにはカーソルが無く、hover の
+         明るさが効かないので、押したことがここで分かるようにする。 */
+      el.addEventListener('pointerdown', function (e) {
+        var c = e.currentTarget;
+        c.classList.add('is-tap');
+        setTimeout(function () { c.classList.remove('is-tap'); }, 420);
+      });
       el.addEventListener('click', function (s) {
         return function () { open(s.item); };
       }(seat));
@@ -505,6 +533,12 @@
 
   function open(item) {
     if (!item) { return; }
+    /* 一度でも開いた人には、もう「押せます」の印を出さない */
+    if (hinting) {
+      hinting = false;
+      hinted.forEach(function (el) { el.classList.remove('is-hint'); });
+      try { window.localStorage.setItem(TAP_KEY, '1'); } catch (e) {}
+    }
     /* 帯で読み込んだのと同じ1枚を使う（キャッシュに乗っている） */
     var lpath = item.getAttribute('data-img');
     lbImg.onerror = function () { this.onerror = null; this.src = lpath; };
