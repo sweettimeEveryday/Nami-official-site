@@ -200,7 +200,7 @@ ul{list-style:none;margin:0;padding:0}
 }
 /* 丸の中身がアイコンのとき（グッズと応援）。まわりの文字と同じ細さに見えるよう
    線を1.2pxにしてある。色は .card__ic の color をそのまま継ぐ */
-.card__ic svg{width:19px;height:19px;fill:none;stroke:currentColor;
+.card__ic svg{width:20px;height:20px;fill:none;stroke:currentColor;
   stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
 /* 丸の中身が公式ロゴの画像のとき（YouTube / TikTok / AWA）。
    ロゴは色も形も変えられないので、こちらで合わせるのは大きさと余白だけ。
@@ -245,6 +245,17 @@ ul{list-style:none;margin:0;padding:0}
 /* ---------- footer ---------- */
 .ft{border-top:1px solid var(--line);padding:56px 0 40px;text-align:center;background:var(--bg-2)}
 .ft__mark{width:40px;margin:0 auto 20px;opacity:.75}
+/* ひみつの一枚。押しっぱなしにすると、1秒すぎからゆっくり明るく大きくなる。
+   長押しで「画像を保存」のメニューが出ないように、選択とドラッグも止める。 */
+.ft__mark{
+  -webkit-touch-callout:none;
+  user-select:none;-webkit-user-select:none;-webkit-user-drag:none;
+}
+.ft__mark.is-holding{animation:markHold 2s linear forwards!important}
+@keyframes markHold{
+  from{opacity:.75;transform:scale(1)}
+  to{opacity:1;transform:scale(1.18)}
+}
 .ft__nav{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;margin-bottom:26px}
 .ft__nav a{font-family:var(--serif-en);font-size:11px;letter-spacing:.18em;
   color:var(--text-2);text-transform:uppercase}
@@ -544,7 +555,7 @@ ul{list-style:none;margin:0;padding:0}
 .lb__nav--prev{left:12px}
 .lb__nav--next{right:12px}
 .lb__nav:hover{background:rgba(8,8,10,.78);border-color:#fff}
-.lb__nav svg{width:19px;height:19px;fill:none;stroke:currentColor;
+.lb__nav svg{width:20px;height:20px;fill:none;stroke:currentColor;
   stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 /* いま何枚目か。読めればよいので、いちばん静かに置く */
 .lb__count{
