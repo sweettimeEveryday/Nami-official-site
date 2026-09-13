@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- ▼ 検索に出さないための指定です。
+     検索エンジンはこの1行を見て、このページを索引に入れません。
+     見出し（h1/h2）の有無は検索には関係しないので、効いているのは
+     この robots の指定と、「サイトのどこからもリンクしていない」
+     ことの2つです。robots.txt には書きません。書くと、それを読んだ
+     人にかえって場所を教えてしまうためです。 -->
+<meta name="robots" content="noindex,nofollow,noarchive,noimageindex">
+<meta name="referrer" content="no-referrer">
+<title>クラウドファンディング</title>
+<link rel="icon" href="assets/img/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Shippori+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+/* このページだけの見た目。1枚しか使わないので、共通の style.css は
+   汚さずにここに置いています。色と書体は共通の変数をそのまま借ります。 */
+
+/* hidden を付けた要素は必ず消す。
+   ブラウザ既定の [hidden]{display:none} は、こちらが書いた
+   display:flex などにいつでも負けるため、明示的に上書きしておく。 */
+[hidden]{display:none!important}
+.fd{padding:clamp(56px,10vh,104px) var(--pad) clamp(64px,10vh,110px);
+  background:radial-gradient(120% 62% at 50% 0%,rgb(var(--accent-rgb,163 18 28) / .05),transparent 62%)}
+.fd__in{width:100%;max-width:560px;margin:0 auto}
+.fd__mark{width:44px;margin:0 auto;opacity:.75;filter:brightness(.45) contrast(1.15)}
+
+/* 見出し。読み上げソフトに構造を伝えるための h1/h2 ですが、
+   大きさや太さは本文とそろえて、静かなままにしてあります。 */
+.fd__en{margin:26px 0 0;text-align:center;font-family:var(--serif-en);
+  font-size:11px;letter-spacing:.30em;color:var(--crimson-hi);text-transform:uppercase}
+.fd__t{margin:12px 0 0;text-align:center;font-family:var(--serif-jp);font-weight:400;
+  font-size:clamp(19px,3vw,25px);letter-spacing:.12em;line-height:1.8}
+.fd__lead{margin:20px 0 0;text-align:center;color:var(--text-2);
+  font-size:14px;line-height:2.15;letter-spacing:.05em}
+
+.fd__sec{margin:44px 0 0;padding-top:30px;border-top:1px solid var(--line)}
+.fd__h{margin:0;font-family:var(--serif-jp);font-weight:400;
+  font-size:14px;letter-spacing:.18em;color:var(--text-2)}
+
+/* いくら集まったか */
+.fd__now{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:18px 0 0}
+.fd__yen{font-family:var(--serif-en);font-size:clamp(30px,6vw,44px);
+  letter-spacing:.02em;color:var(--text);line-height:1}
+.fd__of{font-size:12px;letter-spacing:.10em;color:var(--text-3)}
+/* 棒。左端が0円、右端がいちばん上の段（ぜんぶ届いた額）です。
+   目盛りは段の位置に立てますが、金額は出しません。
+   出すのは「ライブ開催」の1本だけ。 */
+.fd__scale{margin:20px 0 0}
+.fd__bar{position:relative;height:8px;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.fd__bar i{position:absolute;inset:0 auto 0 0;display:block;width:0;
+  background:linear-gradient(90deg,var(--crimson),var(--crimson-hi));
+  transition:width 1.1s var(--ease)}
+.fd__tick{position:absolute;top:0;bottom:0;width:1px;z-index:2;
+  background:var(--line-2);transform:translateX(-.5px)}
+.fd__tick.is-done{background:rgba(255,255,255,.60)}
+/* 目盛りの名前。いまは「ライブ開催」だけが名前を持っています */
+.fd__labels{position:relative;height:16px;margin:7px 0 0}
+.fd__lb{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;
+  font-size:11px;letter-spacing:.08em;color:var(--text-3);transition:color .5s var(--ease)}
+.fd__lb::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:4px;
+  background:var(--line-2)}
+.fd__lb.is-done{color:var(--crimson-hi)}
+.fd__lb.is-done::before{background:var(--crimson)}
+/* ぜんぶ届いたとき */
+.fd__done{margin:20px 0 0;padding:20px 18px;text-align:center;
+  border:1px solid var(--crimson);border-radius:var(--r);
+  background:rgb(var(--accent-rgb,163 18 28) / .07)}
+.fd__doneEn{margin:0;font-family:var(--serif-en);font-size:13px;letter-spacing:.28em;
+  color:var(--crimson-hi);text-transform:uppercase}
+.fd__doneT{margin:11px 0 0;font-size:13px;line-height:2;letter-spacing:.05em;color:var(--text-2)}
+.fd__meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin:12px 0 0;
+  font-size:12px;letter-spacing:.06em;color:var(--text-3)}
+.fd__pc{font-family:var(--serif-en);letter-spacing:.10em;color:var(--crimson-hi)}
+.fd__rest{color:var(--text-2)}
+
+/* 内訳 */
+.fd__rows{margin:18px 0 0;list-style:none;padding:0}
+.fd__row{display:flex;align-items:baseline;gap:12px;padding:11px 0;
+  border-bottom:1px solid var(--line)}
+.fd__row:last-child{border-bottom:0}
+.fd__nm{flex:1 1 auto;font-size:13px;letter-spacing:.08em;color:var(--text-2)}
+.fd__am{font-family:var(--serif-en);font-size:15px;letter-spacing:.04em;color:var(--text)}
+
+/* 積み上げ */
+.fd__steps{margin:18px 0 0;list-style:none;padding:0;display:grid;gap:10px}
+.fd__step{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);
+}
+.fd__step.is-done{border-color:var(--crimson);background:rgb(var(--accent-rgb,163 18 28) / .06)}
+.fd__at{font-family:var(--serif-en);font-size:13px;letter-spacing:.04em;
+  color:var(--text-3);white-space:nowrap;min-width:5.6em}
+.fd__step.is-done .fd__at{color:var(--crimson-hi)}
+.fd__what{flex:1 1 auto;font-size:13px;line-height:1.85;letter-spacing:.05em;color:var(--text-2)}
+/* 中身を伏せている段。文章はファイルにも書いていません */
+.fd__q{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border:1px solid var(--line-2);border-radius:50%;
+  font-family:var(--serif-en);font-size:14px;color:var(--text-3);
+}
+.fd__what img{width:34px;height:34px;object-fit:contain;display:block}
+
+/* 参加のしかた */
+.fd__ways{margin:18px 0 0;display:flex;flex-wrap:wrap;gap:12px}
+.fd__way{
+  flex:1 1 150px;display:inline-flex;align-items:center;justify-content:center;
+  padding:15px 18px;border:1px solid var(--line-2);border-radius:var(--r);
+  font-family:var(--sans-jp);font-size:13px;letter-spacing:.14em;color:var(--silver);
+  transition:border-color .4s var(--ease),color .4s var(--ease),background .4s var(--ease);
+}
+.fd__way:hover{border-color:var(--crimson);color:var(--silver-hi);background:rgb(var(--accent-rgb,163 18 28) / .08)}
+
+/* おことわり */
+.fd__notes{margin:18px 0 0;padding:0;list-style:none}
+.fd__notes li{position:relative;padding-left:1.1em;margin-top:8px;
+  font-size:12px;line-height:1.95;letter-spacing:.04em;color:var(--text-3)}
+.fd__notes li::before{content:"—";position:absolute;left:0;color:var(--line-2)}
+.fd__upd{margin:16px 0 0;text-align:center;font-size:11.5px;letter-spacing:.06em;color:var(--text-3)}
+/* 過去のナミさんから未来のナミさんへの、ひとこと。
+   最終更新からの日数で出ます。小さく、ぼそっと。 */
+.fd__nag{margin:7px 0 0;text-align:center;font-size:11.5px;letter-spacing:.06em;
+  line-height:1.9;color:var(--text-3);opacity:.9}
+
+/* 音声 */
+.fd__audio{margin:34px 0 0;padding-top:28px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:12px}
+.fd__play{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:14px 34px;border:1px solid var(--line-2);border-radius:var(--r);
+  background:transparent;cursor:pointer;
+  font-family:var(--sans-jp);font-size:13px;letter-spacing:.18em;color:var(--silver);
+  transition:border-color .4s var(--ease),color .4s var(--ease),background .4s var(--ease);
+}
+.fd__play:hover{border-color:var(--crimson);color:var(--silver-hi);background:rgb(var(--accent-rgb,163 18 28) / .08)}
+.fd__play svg{width:15px;height:15px;fill:currentColor}
+.fd__small{margin:0;font-size:11.5px;letter-spacing:.06em;color:var(--text-3)}
+
+.fd__back{display:block;margin:46px auto 0;width:max-content;
+  font-family:var(--serif-en);font-size:11px;letter-spacing:.24em;
+  color:var(--text-3);text-transform:uppercase;transition:color .4s var(--ease)}
+.fd__back:hover{color:var(--crimson-hi)}
+</style>
+</head>
+<body>
+
+<main class="fd">
+  <div class="fd__in">
+
+    <img class="fd__mark" src="assets/img/logo_mark_transparent_256.png" alt="" aria-hidden="true">
+    <p class="fd__en">Saving Together</p>
+    <h1 class="fd__t">西園寺ナミ リアルライブ<br>クラウドファンディング</h1>
+
+    <!-- ▼ ここのことばは自由に書きかえてください ------------------ -->
+    <p class="fd__lead">
+      いつか、同じ場所で会いたい。<br>
+      その日のための積み立てを、ここではじめます。
+    </p>
+    <!-- ▲ ここまで ------------------------------------------------- -->
+
+    <p class="fd__upd">最終更新　<span id="fdUpd">—</span></p>
+    <p class="fd__nag" id="fdNag" hidden></p>
+
+    <section class="fd__sec">
+      <h2 class="fd__h">いま、ここまで</h2>
+      <p class="fd__now">
+        <span class="fd__yen" id="fdNow">—</span>
+        <span class="fd__of">／ ライブ開催日までに <span id="fdGoal">—</span></span>
+      </p>
+      <div class="fd__scale">
+        <div class="fd__bar" role="img" id="fdBarBox" aria-label="達成率">
+          <i id="fdBar"></i>
+        </div>
+        <div class="fd__labels" id="fdLabels"></div>
+      </div>
+      <p class="fd__meta">
+        <span class="fd__pc" id="fdPc">—</span>
+        <span class="fd__rest" id="fdRest"></span>
+        <span id="fdBackers"></span>
+      </p>
+      <div class="fd__done" id="fdDone" hidden>
+        <p class="fd__doneEn">We Made It</p>
+        <p class="fd__doneT">きいたか、おいら達やりとげたってよ！！<br>さぁ、リアルライブ開幕第２弾、心の準備はいいか？</p>
+      </div>
+    </section>
+
+    <section class="fd__sec">
+      <h2 class="fd__h">内訳</h2>
+      <ul class="fd__rows" id="fdRows"></ul>
+      <p class="fd__small" style="margin-top:12px">手数料を引いたあとの、受取金額です。</p>
+    </section>
+
+    <section class="fd__sec">
+      <h2 class="fd__h">ここまで届いたら</h2>
+      <ul class="fd__steps" id="fdSteps"></ul>
+    </section>
+
+    <section class="fd__sec">
+      <h2 class="fd__h">とどけかた</h2>
+      <div class="fd__ways" id="fdWays"></div>
+    </section>
+
+    <section class="fd__sec">
+      <h2 class="fd__h">おことわり</h2>
+      <!-- ▼ ここも書きかえてください。消してもかまいません ---------- -->
+      <ul class="fd__notes">
+        <li>個々へのリターンはありません。届けてくださったお金は、リアルライブを開くための費用にあてます。</li>
+        <li>いただいたお金はお返しできません。それでもいい、と思ってくださる方だけ、無理のない範囲でお願いします。</li>
+        <li>ライブの開催日は、目標に届いたあとで決めます。</li>
+        <li>金額はこちらで数えたものを手で反映しています。反映まで少し時間がかかることがあります。</li>
+      </ul>
+      <!-- ▲ ここまで ------------------------------------------------- -->
+    </section>
+
+    <!-- 音声。assets/audio/secret.mp3 を置くと、ここに再生ボタンが出ます。
+         ファイルが無いあいだは、この枠ごと出ません（壊れません）。 -->
+    <div class="fd__audio" id="secBox" hidden>
+      <audio id="secAudio" preload="metadata" src="assets/audio/secret.mp3"></audio>
+      <button class="fd__play" type="button" id="secPlay">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.8v12.4L14 8z"/></svg>
+        <span id="secLabel">きく</span>
+      </button>
+      <p class="fd__small">音が出ます。まわりに気をつけて。</p>
+    </div>
+
+    <a class="fd__back" href="index.html">Back</a>
+
+  </div>
+</main>
+
+<!-- 金額はこのファイルにだけ書いてあります。ここを書きかえてください -->
+<script src="assets/data/fund.js"></script>
+<script>
+/* 数字をページに流し込むだけの処理。
+   fund.js が無い・壊れているときは「—」のまま止まり、他は普通に見えます。 */
+(function () {
+  'use strict';
+  var F = window.NAMI_FUND;
+  var $ = function (id) { return document.getElementById(id); };
+  var yen = function (n) { return '¥' + Number(n || 0).toLocaleString('ja-JP'); };
+  var esc = function (s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  };
+  if (!F) { return; }
+
+  var list = F.sources || [];
+  var total = 0;
+  for (var i = 0; i < list.length; i++) { total += Number(list[i].amount || 0); }
+  var goal = Number(F.goal || 0);
+
+  /* 棒の右端は「いちばん上の段」。段が無いときだけ目標額を右端にします。
+     左端は 0円。つまり棒は 0 → いちばん上の段 をまるごと表しています */
+  var stepList = (F.steps || []).slice().sort(function (a, c) {
+    return Number(a.at || 0) - Number(c.at || 0);
+  });
+  var top = stepList.length ? Number(stepList[stepList.length - 1].at || 0) : goal;
+  if (!(top > 0)) { top = goal; }
+
+  /* 達成率は「ライブ開催（目標額）」を100%として数えます。
+     超えたあとも 140% のように、そのまま出し続けます */
+  var pc = goal > 0 ? total / goal * 100 : 0;
+
+  $('fdNow').textContent = yen(total);
+  $('fdGoal').textContent = yen(goal);
+  $('fdPc').textContent = (Math.floor(pc * 10) / 10) + '%';
+  $('fdBarBox').setAttribute('aria-label', '達成率 ' + Math.floor(pc) + 'パーセント');
+  /* 棒の伸びぐあいは右端（いちばん上の段）に対しての割合です */
+  requestAnimationFrame(function () {
+    $('fdBar').style.width = Math.min(100, top > 0 ? total / top * 100 : 0) + '%';
+  });
+
+  /* 目盛り。金額は出しません。
+     いちばん上の段は棒の右端そのものなので、線は立てません */
+  var ticks = '', at, k2;
+  for (k2 = 0; k2 < stepList.length - 1; k2++) {
+    at = Number(stepList[k2].at || 0);
+    if (!(at > 0) || !(at < top)) { continue; }
+    ticks += '<span class="fd__tick' + (total >= at ? ' is-done' : '') +
+             '" style="left:' + (at / top * 100) + '%"></span>';
+  }
+  $('fdBarBox').insertAdjacentHTML('beforeend', ticks);
+
+  /* 名前が付くのは「ライブ開催」の1本だけ */
+  $('fdLabels').innerHTML = (goal > 0 && goal < top)
+    ? '<span class="fd__lb' + (total >= goal ? ' is-done' : '') +
+      '" style="left:' + (goal / top * 100) + '%">ライブ開催</span>'
+    : '';
+
+  /* いま、どこを目指しているか */
+  var next = null;
+  for (k2 = 0; k2 < stepList.length; k2++) {
+    if (total < Number(stepList[k2].at || 0)) { next = stepList[k2]; break; }
+  }
+  if (!next) {
+    /* ぜんぶ届いた */
+    $('fdRest').textContent = '';
+    $('fdDone').hidden = false;
+  } else if (Number(next.at) === goal) {
+    $('fdRest').textContent = 'ライブ開催まで あと ' + yen(goal - total);
+  } else {
+    $('fdRest').textContent = '次は あと ' + yen(Number(next.at) - total);
+  }
+
+  /* 人数。0人のあいだは出さない */
+  var b = Number(F.backers);
+  $('fdBackers').textContent = (F.backers && b > 0) ? (b + '人') : '';
+
+  /* 内訳 */
+  var rows = '';
+  for (var j = 0; j < list.length; j++) {
+    rows += '<li class="fd__row"><span class="fd__nm">' + esc(list[j].name) +
+            '</span><span class="fd__am">' + yen(list[j].amount) + '</span></li>';
+  }
+  $('fdRows').innerHTML = rows;
+
+  /* 積み上げ。text の無い段は中身を伏せる（文章はファイルにも入れていない） */
+  var steps = F.steps || [], out = '';
+  for (var k = 0; k < steps.length; k++) {
+    var s = steps[k];
+    var done = total >= Number(s.at || 0);
+    var what = s.text
+      ? esc(s.text)
+      : (s.img
+          ? '<img src="' + esc(s.img) + '" alt="">'
+          : '<span class="fd__q" aria-label="まだひみつ">?</span>');
+    out += '<li class="fd__step' + (done ? ' is-done' : '') + '">' +
+             '<span class="fd__at">' + yen(s.at) + '</span>' +
+             '<span class="fd__what">' + what + '</span>' +
+           '</li>';
+  }
+  $('fdSteps').innerHTML = out;
+
+  /* とどけかた。url の無いものはボタンを出さない */
+  var ways = F.ways || [], w = '';
+  for (var m = 0; m < ways.length; m++) {
+    if (!ways[m].url) { continue; }
+    w += '<a class="fd__way" href="' + esc(ways[m].url) + '" target="_blank" rel="noopener noreferrer">' +
+         esc(ways[m].name) + '</a>';
+  }
+  $('fdWays').innerHTML = w;
+
+  /* 最終更新 */
+  /* 最終更新。見ている人の国の時計に引きずられないよう、
+     いつでも日本時間で出します（海外から見ても同じ時刻） */
+  if (F.updated) {
+    var d = new Date(F.updated);
+    if (isNaN(d)) {
+      $('fdUpd').textContent = String(F.updated);
+    } else {
+      var txt;
+      try {
+        txt = d.toLocaleString('ja-JP', {
+          timeZone: 'Asia/Tokyo', year: 'numeric', month: 'long', day: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      } catch (e) {
+        txt = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+      }
+      $('fdUpd').textContent = txt + '（日本時間）';
+    }
+  }
+
+  /* ------------------------------------------------------------
+     過去のナミさんから、未来のナミさんへ。
+     最終更新から 5日 / 7日 / 10日 で、ひとことだけ出ます。
+     ・その日のうちは同じ文のまま。日が変わると隣の文にずれます
+     ・見ている人みんなに出ます（こっそりではありません）
+     ・うるさくなったら fund.js の nag を false にしてください
+     ------------------------------------------------------------ */
+  (function () {
+    if (F.nag === false) { return; }
+    var el = $('fdNag');
+    if (!el || !F.updated) { return; }
+    var u = new Date(F.updated);
+    if (isNaN(u)) { return; }
+
+    var DAY = 86400000;
+    var passed = Math.floor((Date.now() - u.getTime()) / DAY);
+
+    var D5 = [
+      'そろそろまずい。',
+      'あれ、そろそろでは。',
+      '見て見ぬふりをしている。',
+      '気づいてるよね。気づいてるでしょ。',
+      '5日。まだ間に合う。たぶん。',
+      'カレンダーから目をそらしている。',
+      '今日やる、と昨日も言っていた。',
+      'あと1日でいい、が3回目。'
+    ];
+    var D7 = [
+      '前回の更新から1週間か。そろそろ更新しましょうね。',
+      '1週間。過去のわたしが見ています。',
+      '一週間ぶんの言い訳を考えている。',
+      '7日。数えるのをやめたのは、どっち。',
+      '一週間前のわたしは、もっとやる気だった。',
+      '先週のわたしに顔向けできる？',
+      '週が変わりました。数字は変わっていません。',
+      'そろそろ、と言い続けて7日目。'
+    ];
+    var D10 = [
+      'はよ更新せい。',
+      '過去のナミさんが嘆いているぜ。',
+      'なんでこんなシステムを思いついてしまったんだ。',
+      '10日。もう言い訳は聞かないぜ。',
+      '過去のわたしは、こうなると思っていた。',
+      'この一行を消したいなら、更新すればいい。',
+      '二桁になりましたよ。',
+      'わたしが作った仕組みに、わたしが追われている。'
+    ];
+
+    var lines = passed >= 10 ? D10 : (passed >= 7 ? D7 : (passed >= 5 ? D5 : null));
+    if (!lines) { return; }
+
+    /* 日本時間で「きょうが何日目か」。同じ日は同じ文、日が変わると隣へ */
+    var dayNo = Math.floor((Date.now() + 9 * 3600000) / DAY);
+    var i2 = ((dayNo % lines.length) + lines.length) % lines.length;
+    el.textContent = lines[i2];
+    el.hidden = false;
+  })();
+})();
+
+/* 音声。開いた直後に鳴らせるなら鳴らし、ブラウザに断られたらボタンで待ちます。
+   ファイルが置かれていないときは、枠ごと出しません。 */
+(function () {
+  'use strict';
+  var box = document.getElementById('secBox');
+  var a = document.getElementById('secAudio');
+  var btn = document.getElementById('secPlay');
+  var label = document.getElementById('secLabel');
+  if (!box || !a || !btn) { return; }
+
+  var show = function () { box.hidden = false; };
+  ['loadedmetadata', 'canplay', 'loadeddata'].forEach(function (n) { a.addEventListener(n, show); });
+  a.addEventListener('error', function () { box.hidden = true; });
+  a.load();
+
+  var set = function () { label.textContent = a.paused ? 'きく' : 'とめる'; };
+  btn.addEventListener('click', function () {
+    if (a.paused) { a.play().catch(function () { /* 断られたら押し直してもらう */ }); }
+    else { a.pause(); }
+  });
+  ['play', 'pause', 'ended'].forEach(function (n) { a.addEventListener(n, set); });
+
+  var p = a.play();
+  if (p && p.catch) { p.catch(function () {}); }
+})();
+</script>
+
+</body>
+</html>
