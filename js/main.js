@@ -805,6 +805,53 @@
   });
 })();
 
+/* 西園寺ナミ OFFICIAL SITE — ひみつの一枚
+   フッターのロゴマークを3秒押しっぱなしにすると、どこからもリンクして
+   いないページが開きます。どのページのフッターからでも開けます。
+   ・1秒すぎたところからマークがゆっくり明るく大きくなります。すぐに
+     反応させないのは、うっかり長押ししただけの人が迷い込まないため。
+     気づいて押し続けた人だけが最後までたどり着きます。
+   ・静的なサイトなので、行き先はこのファイルを読めば分かります。
+     見つけた人へのごほうびであって、鍵ではありません。
+     本当に見せたくないものは置かないでください。 */
+(function () {
+  'use strict';
+  var mark = document.querySelector('.ft__mark');
+  if (!mark) { return; }
+
+  var DEST = 'yoru-no-sukima.html';   /* 行き先。名前を変えるならここだけ */
+  var HOLD = 3000;                    /* 押しっぱなしの長さ（ミリ秒） */
+  var SHOW = 1000;                    /* 反応が見えはじめるまで */
+
+  var t1 = null, t2 = null, on = false;
+
+  function stop() {
+    on = false;
+    clearTimeout(t1); clearTimeout(t2);
+    mark.classList.remove('is-holding');
+  }
+  function start(e) {
+    if (e.button && e.button !== 0) { return; }   /* 右クリックでは始めない */
+    stop();
+    on = true;
+    t1 = setTimeout(function () { if (on) { mark.classList.add('is-holding'); } }, SHOW);
+    t2 = setTimeout(function () {
+      if (!on) { return; }
+      stop();
+      location.href = DEST;
+    }, HOLD);
+  }
+
+  mark.addEventListener('pointerdown', start);
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) {
+    mark.addEventListener(n, stop);
+  });
+  window.addEventListener('blur', stop);
+  /* スマホで画像を長押しすると「保存」のメニューが出てしまうので止める */
+  mark.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  mark.addEventListener('dragstart', function (e) { e.preventDefault(); });
+})();
+
 /* 西園寺ナミ OFFICIAL SITE — ブランドのロゴ
    assets/img/brand/ に公式のロゴ画像を置くと、カードの丸の中がその画像に
    なります。まだ置いていない（か読めなかった）ときは、もとの英字
